@@ -1,45 +1,37 @@
-import json
-from settings import client
-
-MODEL_ID = "amazon.nova-lite-v1:0"
-
-
-def build_prompt(repo_data):
-
-    prompt = f"""
-Analyze this GitHub repository.
-
-Name: {repo_data['name']}
-Description: {repo_data['description']}
-Language: {repo_data['language']}
-Stars: {repo_data['stars']}
-
-Provide:
-1. Project purpose
-2. Technologies used
-3. Possible improvements
-"""
-
-    return prompt
-
-
 def analyze_repo(repo_data):
 
-    prompt = build_prompt(repo_data)
+    name = repo_data.get("name")
+    description = repo_data.get("description")
+    language = repo_data.get("language")
+    stars = repo_data.get("stars") or 0
 
-    body = {
-        "inputText": prompt,
-        "textGenerationConfig": {
-            "maxTokenCount": 300,
-            "temperature": 0.5
-        }
-    }
+    if stars > 500:
+        popularity = "Highly popular repository"
+    elif stars > 100:
+        popularity = "Moderately popular repository"
+    else:
+        popularity = "New or niche repository"
 
-    response = client.invoke_model(
-        modelId=MODEL_ID,
-        body=json.dumps(body)
-    )
+    summary = f"""
+Project Name: {name}
 
-    result = json.loads(response["body"].read())
+Description:
+{description}
 
-    return result["results"][0]["outputText"]
+Primary Language:
+{language}
+
+Stars:
+{stars}
+
+Popularity Level:
+{popularity}
+
+Possible Improvements:
+- Improve documentation
+- Add more tests
+- Optimize performance
+- Add contribution guidelines
+"""
+
+    return summary
