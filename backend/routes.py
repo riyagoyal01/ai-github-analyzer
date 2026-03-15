@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from request_models import RepoRequest
+from request_models import RepoRequest, RepoAnalysisResponse
 from github_service import get_repo_data
-from nova_service import analyze_repo
+from repo_analyzer import analyze_repo
 
 
 router = APIRouter()
@@ -16,7 +16,7 @@ def extract_repo(repo_url: str):
     return owner, repo
 
 
-@router.post("/analyze")
+@router.post("/analyze", response_model=RepoAnalysisResponse)
 def analyze_repository(request: RepoRequest):
 
     owner, repo = extract_repo(request.repo_url)
