@@ -7,13 +7,12 @@ from repo_analyzer import analyze_repo
 router = APIRouter()
 
 
-def extract_repo(repo_url: str):
-
-    parts = repo_url.rstrip("/").split("/")
+def extract_repo(repo_url):
+    parts = str(repo_url).rstrip("/").split("/")
     owner = parts[-2]
     repo = parts[-1]
-
     return owner, repo
+
 
 
 @router.post("/analyze", response_model=RepoAnalysisResponse)
