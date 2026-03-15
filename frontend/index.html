@@ -2,606 +2,627 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI GitHub Analyzer</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-deep:    #090d17;
-      --bg-mid:     #0e1625;
-      --glass:      rgba(255,255,255,0.04);
-      --glass-border: rgba(255,255,255,0.09);
-      --accent:     #3dffa0;
-      --accent-dim: rgba(61,255,160,0.15);
-      --accent-glow: rgba(61,255,160,0.35);
-      --blue:       #5b9cf6;
-      --purple:     #a78bfa;
-      --text:       #e8edf5;
-      --muted:      #5a6a82;
-      --card-bg:    rgba(14,22,37,0.85);
+      --bg-from: #0a0e1a;
+      --bg-mid:  #0d1528;
+      --bg-to:   #060b14;
+      --accent:  #3b82f6;
+      --accent2: #06b6d4;
+      --green:   #10b981;
+      --yellow:  #f59e0b;
+      --red:     #ef4444;
+      --glass:   rgba(255,255,255,0.04);
+      --border:  rgba(255,255,255,0.08);
+      --text:    #e2e8f0;
+      --muted:   #64748b;
     }
 
     html, body {
-      min-height: 100vh;
-      font-family: 'Syne', sans-serif;
-      background: var(--bg-deep);
+      min-height: 100%;
+      font-family: 'DM Sans', sans-serif;
       color: var(--text);
-      overflow-x: hidden;
+      background: var(--bg-from);
     }
 
+    /* ── Animated mesh background ── */
+    body {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(59,130,246,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(6,182,212,0.10) 0%, transparent 65%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(16,185,129,0.05) 0%, transparent 60%),
+        linear-gradient(160deg, var(--bg-from) 0%, var(--bg-mid) 50%, var(--bg-to) 100%);
+      background-attachment: fixed;
+    }
+
+    /* ── Noise grain overlay ── */
     body::before {
       content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 10% 20%,  rgba(91,156,246,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 85% 75%,  rgba(167,139,250,0.10) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 40% at 50% 50%,  rgba(61,255,160,0.05) 0%, transparent 60%);
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
       pointer-events: none;
+      z-index: 0;
     }
 
+    /* ── Grid dots ── */
     body::after {
       content: '';
-      position: fixed; inset: 0; z-index: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
       pointer-events: none;
+      z-index: 0;
     }
 
     .page {
-      position: relative; z-index: 1;
+      position: relative;
+      z-index: 1;
       min-height: 100vh;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px 60px;
     }
 
-    /* Header */
+    /* ── Header ── */
     .header {
       text-align: center;
-      margin-bottom: 48px;
-      animation: fadeDown 0.7s ease both;
+      margin-bottom: 40px;
     }
 
     .badge {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: var(--accent-dim);
-      border: 1px solid rgba(61,255,160,0.25);
-      border-radius: 100px;
-      padding: 5px 14px;
-      font-family: 'JetBrains Mono', monospace;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.25);
+      color: #93c5fd;
+      font-family: 'DM Mono', monospace;
       font-size: 11px;
-      color: var(--accent);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
       margin-bottom: 20px;
     }
 
-    .badge .dot {
+    .badge-dot {
       width: 6px; height: 6px;
-      background: var(--accent);
       border-radius: 50%;
-      animation: pulse 1.8s ease infinite;
+      background: #3b82f6;
+      animation: pulse 2s infinite;
     }
 
-    .title {
-      font-size: clamp(32px, 6vw, 56px);
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
       font-weight: 800;
-      line-height: 1.08;
+      line-height: 1.1;
       letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #e8edf5 0%, #5b9cf6 50%, var(--accent) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background: linear-gradient(135deg, #fff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
       background-clip: text;
+      margin-bottom: 12px;
     }
 
     .subtitle {
-      margin-top: 12px;
       color: var(--muted);
       font-size: 15px;
       font-weight: 400;
     }
 
-    /* Main card */
+    /* ── Card ── */
     .card {
-      width: 100%; max-width: 620px;
-      background: var(--card-bg);
-      border: 1px solid var(--glass-border);
+      width: 100%;
+      max-width: 620px;
+      background: var(--glass);
+      border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 36px 36px 32px;
-      backdrop-filter: blur(24px);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px rgba(0,0,0,0.5), 0 0 80px rgba(61,255,160,0.04);
-      animation: fadeUp 0.7s 0.15s ease both;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.02),
+        0 20px 60px rgba(0,0,0,0.5),
+        0 0 80px rgba(59,130,246,0.05);
     }
 
-    .card-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.14em;
+    /* ── Input group ── */
+    .input-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      display: block;
     }
 
-    /* Input */
     .input-wrap {
       position: relative;
       margin-bottom: 16px;
     }
 
     .input-icon {
-      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--muted);
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.4;
+      font-size: 16px;
       pointer-events: none;
-      transition: color 0.2s;
     }
 
-    .url-input {
+    input[type="text"] {
       width: 100%;
-      background: rgba(255,255,255,0.035);
-      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 14px 16px 14px 44px;
       color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'DM Mono', monospace;
       font-size: 13.5px;
+      padding: 14px 16px 14px 42px;
       outline: none;
-      transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
 
-    .url-input::placeholder { color: var(--muted); }
+    input[type="text"]::placeholder { color: var(--muted); }
 
-    .url-input:focus {
-      border-color: rgba(61,255,160,0.4);
-      background: rgba(61,255,160,0.03);
-      box-shadow: 0 0 0 3px rgba(61,255,160,0.08), 0 0 20px rgba(61,255,160,0.06);
+    input[type="text"]:focus {
+      border-color: rgba(59,130,246,0.5);
+      background: rgba(59,130,246,0.04);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
     }
 
-    .input-wrap:focus-within .input-icon { color: var(--accent); }
-
-    /* Button */
+    /* ── Button ── */
     .btn {
       width: 100%;
-      position: relative; overflow: hidden;
-      background: linear-gradient(135deg, #2be87c 0%, #3dffa0 50%, #5ff5b8 100%);
-      color: #021a0c;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
       font-family: 'Syne', sans-serif;
-      font-size: 14.5px;
+      font-size: 15px;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      border: none; border-radius: 12px;
-      padding: 15px 24px;
+      letter-spacing: 0.02em;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #2563eb, #0891b2);
+      color: #fff;
       transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
-      box-shadow: 0 4px 20px rgba(61,255,160,0.3);
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      box-shadow: 0 4px 20px rgba(37,99,235,0.4), 0 0 40px rgba(37,99,235,0.15);
     }
 
     .btn::before {
       content: '';
-      position: absolute; inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.25), transparent);
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent 60%);
       opacity: 0;
       transition: opacity 0.2s;
     }
 
     .btn:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(61,255,160,0.45);
+      box-shadow: 0 8px 30px rgba(37,99,235,0.5), 0 0 50px rgba(37,99,235,0.2);
       filter: brightness(1.08);
     }
 
-    .btn:hover:not(:disabled)::before { opacity: 1; }
-    .btn:active:not(:disabled) { transform: translateY(0px); }
-    .btn:disabled { cursor: not-allowed; opacity: 0.7; filter: saturate(0.6); }
+    .btn:hover::before { opacity: 1; }
 
+    .btn:active:not(:disabled) { transform: translateY(0); }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    .btn-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* ── Spinner ── */
     .spinner {
       width: 18px; height: 18px;
-      border: 2.5px solid rgba(2,26,12,0.3);
-      border-top-color: #021a0c;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
       display: none;
     }
 
-    .btn.loading .spinner { display: block; }
-    .btn.loading .btn-icon,
-    .btn.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Error */
-    .error-box {
+    /* ── Status / Error ── */
+    .status-box {
       display: none;
-      margin-top: 16px;
-      background: rgba(255,80,80,0.08);
-      border: 1px solid rgba(255,80,80,0.2);
-      border-radius: 10px;
-      padding: 12px 16px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: #ff7070;
-      line-height: 1.7;
-      white-space: pre-line;
-    }
-
-    .error-box.visible { display: block; animation: fadeUp 0.3s ease both; }
-
-    .cors-fix {
-      display: none;
-      margin-top: 12px;
-      background: rgba(167,139,250,0.07);
-      border: 1px solid rgba(167,139,250,0.2);
-      border-radius: 10px;
+      margin-top: 20px;
       padding: 14px 16px;
-      animation: fadeUp 0.3s ease both;
-    }
-    .cors-fix.visible { display: block; }
-    .cors-fix-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: #a78bfa;
-      margin-bottom: 10px;
-      display: flex; align-items: center; gap: 7px;
-    }
-    .cors-fix-code {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11.5px;
-      color: #c4b5fd;
-      background: rgba(0,0,0,0.3);
-      border-radius: 7px;
-      padding: 12px 14px;
-      white-space: pre;
-      overflow-x: auto;
-      line-height: 1.65;
-      border: 1px solid rgba(167,139,250,0.15);
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.6;
     }
 
-    /* Result card */
+    .status-box.error {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: #fca5a5;
+    }
+
+    .status-box.info {
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.25);
+      color: #fcd34d;
+    }
+
+    .status-box strong { display: block; margin-bottom: 4px; font-weight: 600; }
+    .status-box code {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Result ── */
     .result-card {
       display: none;
-      width: 100%; max-width: 620px;
-      margin-top: 20px;
-      background: var(--card-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 32px 36px;
-      backdrop-filter: blur(24px);
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px rgba(0,0,0,0.5), 0 0 60px rgba(91,156,246,0.06);
+      margin-top: 24px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
     }
 
-    .result-card.visible {
-      display: block;
-      animation: fadeUp 0.45s ease both;
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
     .result-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 24px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: rgba(16,185,129,0.05);
     }
 
-    .result-title {
-      font-size: 13px;
+    .result-header-icon {
+      width: 32px; height: 32px;
+      background: rgba(16,185,129,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+
+    .result-header-text {
+      font-family: 'Syne', sans-serif;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--blue);
+      font-size: 15px;
+      color: #d1fae5;
     }
 
-    .result-name {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text);
-      margin-top: 2px;
+    .result-header-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
     }
 
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(61,255,160,0.1);
-      border: 1px solid rgba(61,255,160,0.2);
-      border-radius: 100px;
-      padding: 5px 12px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--accent);
-    }
+    .result-body { padding: 20px; }
 
-    .stats-grid {
+    .stat-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
-    .stat-item {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 16px 18px;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .stat-item:hover {
-      border-color: rgba(91,156,246,0.25);
-      background: rgba(91,156,246,0.04);
+    .stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
     }
 
     .stat-label {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'DM Mono', monospace;
       font-size: 10px;
-      letter-spacing: 0.12em;
       text-transform: uppercase;
+      letter-spacing: 0.1em;
       color: var(--muted);
       margin-bottom: 6px;
-      display: flex; align-items: center; gap: 6px;
     }
 
     .stat-value {
-      font-size: 20px;
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text);
-      letter-spacing: -0.01em;
+      word-break: break-word;
     }
 
-    .stat-value.accent { color: var(--accent); }
-    .stat-value.blue   { color: var(--blue); }
-
-    .summary-section {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 20px;
-    }
+    .stat-value.star { color: #fbbf24; }
+    .stat-value.lang { color: #67e8f9; }
 
     .summary-label {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'DM Mono', monospace;
       font-size: 10px;
-      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--purple);
+      letter-spacing: 0.1em;
+      color: var(--muted);
       margin-bottom: 10px;
-      display: flex; align-items: center; gap: 6px;
     }
 
     .summary-text {
-      font-size: 14.5px;
-      line-height: 1.75;
-      color: rgba(232,237,245,0.82);
+      font-size: 14px;
+      line-height: 1.7;
+      color: #cbd5e1;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 14px 16px;
     }
 
-    .footer {
-      margin-top: 32px;
-      color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+    /* ── Tips ── */
+    .tips {
+      margin-top: 28px;
+      width: 100%;
+      max-width: 620px;
       text-align: center;
-      letter-spacing: 0.04em;
-      animation: fadeUp 0.7s 0.3s ease both;
     }
 
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.5; transform: scale(0.85); }
+    .tips p {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
     }
 
-    .ripple {
-      position: absolute;
-      border-radius: 50%;
-      background: rgba(2,26,12,0.35);
-      transform: scale(0);
-      animation: rippleAnim 0.55s linear;
-      pointer-events: none;
-    }
-    @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+    .tips a { color: #60a5fa; text-decoration: none; }
+    .tips a:hover { text-decoration: underline; }
 
     @media (max-width: 480px) {
-      .card, .result-card { padding: 24px 20px; }
-      .stats-grid { grid-template-columns: 1fr; }
+      .card { padding: 24px 18px; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
 <div class="page">
 
-  <header class="header">
-    <div class="badge"><span class="dot"></span> AI-Powered · GitHub Analyzer</div>
-    <h1 class="title">Analyze Any<br/>Repository</h1>
-    <p class="subtitle">Paste a GitHub URL and let AI break it down for you</p>
-  </header>
+  <div class="header">
+    <div class="badge"><span class="badge-dot"></span> AI-Powered Analysis</div>
+    <h1>GitHub Repo Analyzer</h1>
+    <p class="subtitle">Drop any public repo URL — get an instant AI summary</p>
+  </div>
 
   <div class="card">
-    <div class="card-label">// Repository URL</div>
-
+    <label class="input-label" for="repoUrl">Repository URL</label>
     <div class="input-wrap">
-      <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>
-      </svg>
+      <span class="input-icon">⌥</span>
       <input
-        id="repoInput"
-        class="url-input"
-        type="url"
-        placeholder="https://github.com/owner/repository"
+        type="text"
+        id="repoUrl"
+        placeholder="https://github.com/owner/repo"
         autocomplete="off"
         spellcheck="false"
       />
     </div>
 
-    <button class="btn" id="analyzeBtn" onclick="analyzeRepo()">
-      <span class="btn-icon">⚡</span>
-      <span class="btn-text">Analyze Repository</span>
-      <div class="spinner"></div>
+    <button class="btn" id="analyzeBtn" onclick="analyze()">
+      <div class="btn-inner">
+        <div class="spinner" id="spinner"></div>
+        <span id="btnText">Analyze Repository</span>
+      </div>
     </button>
 
-    <div class="error-box" id="errorBox"></div>
+    <!-- Error / info box -->
+    <div class="status-box" id="statusBox"></div>
 
-    <div class="cors-fix" id="corsFix">
-      <div class="cors-fix-title">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Add this to your <strong>main.py</strong> to fix CORS:
+    <!-- Result card -->
+    <div class="result-card" id="resultCard">
+      <div class="result-header">
+        <div class="result-header-icon">✦</div>
+        <div>
+          <div class="result-header-text" id="repoName">—</div>
+          <div class="result-header-sub">Repository Analysis</div>
+        </div>
       </div>
-      <pre class="cors-fix-code">from fastapi.middleware.cors import CORSMiddleware
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)</pre>
+      <div class="result-body">
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="stat-label">Language</div>
+            <div class="stat-value lang" id="repoLang">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Stars</div>
+            <div class="stat-value star" id="repoStars">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Status</div>
+            <div class="stat-value" style="color:#34d399;font-size:12px;">Analyzed ✓</div>
+          </div>
+        </div>
+        <div class="summary-label">AI Summary</div>
+        <div class="summary-text" id="repoSummary">—</div>
+      </div>
     </div>
   </div>
 
-  <div class="result-card" id="resultCard">
-    <div class="result-header">
-      <div>
-        <div class="result-title">// Analysis Complete</div>
-        <div class="result-name" id="repoName">—</div>
-      </div>
-      <div class="status-pill">
-        <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
-        Analyzed
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-item">
-        <div class="stat-label">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          Language
-        </div>
-        <div class="stat-value blue" id="repoLanguage">—</div>
-      </div>
-
-      <div class="stat-item">
-        <div class="stat-label">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          Stars
-        </div>
-        <div class="stat-value accent" id="repoStars">—</div>
-      </div>
-    </div>
-
-    <div class="summary-section">
-      <div class="summary-label">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        AI Summary
-      </div>
-      <p class="summary-text" id="repoSummary">—</p>
-    </div>
+  <div class="tips">
+    <p>
+      Backend must be running at <code style="font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,0.06);padding:2px 7px;border-radius:4px;">http://127.0.0.1:8000</code>
+      &nbsp;·&nbsp; Make sure CORS is enabled in FastAPI
+      &nbsp;·&nbsp; <a href="#" onclick="showCORSHelp(event)">Need help?</a>
+    </p>
   </div>
 
-  <footer class="footer">
-    Powered by AI · FastAPI Backend · &copy; 2024
-  </footer>
 </div>
 
 <script>
-  document.getElementById('analyzeBtn').addEventListener('click', function(e) {
-    const btn = this;
-    const rect = btn.getBoundingClientRect();
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    const size = Math.max(rect.width, rect.height);
-    ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
-    btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
-  });
+  const API = 'http://127.0.0.1:8000/analyze';
 
-  document.getElementById('repoInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') analyzeRepo();
-  });
-
-  function setLoading(state) {
+  function setLoading(on) {
     const btn = document.getElementById('analyzeBtn');
-    const input = document.getElementById('repoInput');
-    btn.classList.toggle('loading', state);
-    btn.disabled = state;
-    input.disabled = state;
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = on;
+    spinner.style.display = on ? 'block' : 'none';
+    btnText.textContent = on ? 'Analyzing…' : 'Analyze Repository';
   }
 
-  function showError(msg, showCors = false) {
-    const box = document.getElementById('errorBox');
-    const cors = document.getElementById('corsFix');
-    box.textContent = msg;
-    box.classList.add('visible');
-    if (showCors) cors.classList.add('visible');
-    else cors.classList.remove('visible');
-    setTimeout(() => { box.classList.remove('visible'); cors.classList.remove('visible'); }, 15000);
+  function showStatus(msg, type = 'error') {
+    const box = document.getElementById('statusBox');
+    box.innerHTML = msg;
+    box.className = 'status-box ' + type;
+    box.style.display = 'block';
+  }
+
+  function hideStatus() {
+    document.getElementById('statusBox').style.display = 'none';
+  }
+
+  function showResult(data) {
+    document.getElementById('repoName').textContent   = data.name    || 'Unknown';
+    document.getElementById('repoLang').textContent   = data.language || 'N/A';
+    document.getElementById('repoStars').textContent  = formatStars(data.stars);
+    document.getElementById('repoSummary').textContent = data.summary || 'No summary provided.';
+    const card = document.getElementById('resultCard');
+    card.style.display = 'block';
+    // Re-trigger animation
+    card.style.animation = 'none';
+    card.offsetHeight; // reflow
+    card.style.animation = '';
+  }
+
+  function hideResult() {
+    document.getElementById('resultCard').style.display = 'none';
   }
 
   function formatStars(n) {
+    if (!n && n !== 0) return '—';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
-    return n.toString();
+    return String(n);
   }
 
-  async function analyzeRepo() {
-    const input = document.getElementById('repoInput');
-    const url = input.value.trim();
-    document.getElementById('errorBox').classList.remove('visible');
-    document.getElementById('corsFix').classList.remove('visible');
+  async function analyze() {
+    const url = document.getElementById('repoUrl').value.trim();
 
+    // ── Validation ──
     if (!url) {
-      showError('⚠  Please enter a GitHub repository URL.');
-      input.focus(); return;
-    }
-    if (!url.match(/^https?:\/\/github\.com\/.+\/.+/)) {
-      showError('⚠  Please enter a valid GitHub URL — e.g. https://github.com/owner/repo');
-      input.focus(); return;
+      showStatus('<strong>No URL entered</strong>Please paste a GitHub repository URL.');
+      return;
     }
 
-    // Normalize: strip .git suffix, trailing slashes, and /tree/... branch paths
-    let cleanUrl = url
-      .replace(/\.git$/, '')
-      .replace(/\/+$/, '')
-      .replace(/\/tree\/.*$/, '');
+    // Normalize: strip trailing slash, .git suffix
+    const normalized = url.replace(/\.git$/, '').replace(/\/$/, '');
 
+    // Basic pattern check
+    const ghPattern = /^https?:\/\/(www\.)?github\.com\/[^\/]+\/[^\/\s]+/i;
+    if (!ghPattern.test(normalized)) {
+      showStatus(
+        '<strong>Invalid GitHub URL</strong>' +
+        'Expected format: <code>https://github.com/owner/repo</code><br>' +
+        'Got: <code>' + escHtml(url) + '</code>'
+      );
+      return;
+    }
+
+    hideStatus();
+    hideResult();
     setLoading(true);
-    document.getElementById('resultCard').classList.remove('visible');
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/analyze', {
+      const res = await fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_url: cleanUrl })
+        body: JSON.stringify({ repo_url: normalized }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Server returned ${res.status}`);
+        let detail = '';
+        try {
+          const err = await res.json();
+          detail = err.detail || err.message || JSON.stringify(err);
+        } catch (_) { detail = res.statusText; }
+        showStatus(
+          '<strong>Server error ' + res.status + '</strong>' +
+          (detail ? escHtml(detail) : 'No details from server.')
+        );
+        return;
       }
 
       const data = await res.json();
-      document.getElementById('repoName').textContent     = data.name     || '—';
-      document.getElementById('repoLanguage').textContent = data.language || 'Unknown';
-      document.getElementById('repoStars').textContent    = data.stars != null ? formatStars(data.stars) : '—';
-      document.getElementById('repoSummary').textContent  = data.summary  || 'No summary available.';
-      document.getElementById('resultCard').classList.add('visible');
-      document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showResult(data);
 
     } catch (err) {
-      if (err.name === 'TypeError') {
-        showError('⚠  Failed to fetch — CORS blocked or server not running.\nMake sure uvicorn is running, then add CORSMiddleware to main.py:', true);
-        console.error('%c FastAPI CORS Fix — paste this into main.py ', 'background:#e74c3c;color:#fff;font-weight:bold;padding:4px 8px',
-          '\n\nfrom fastapi.middleware.cors import CORSMiddleware\n\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=["*"],\n    allow_credentials=True,\n    allow_methods=["*"],\n    allow_headers=["*"],\n)'
+      // Network-level error → most likely CORS or server not running
+      const isCORS = err instanceof TypeError && (
+        err.message.toLowerCase().includes('fetch') ||
+        err.message.toLowerCase().includes('network') ||
+        err.message === 'Failed to fetch'
+      );
+
+      if (isCORS) {
+        showStatus(
+          '<strong>⚠ Cannot reach the backend</strong>' +
+          'This is usually a <b>CORS</b> issue or your FastAPI server isn\'t running.<br><br>' +
+          '1. Make sure FastAPI is running: <code>uvicorn main:app --reload</code><br>' +
+          '2. Add CORS middleware to your <code>main.py</code> (click <a href="#" style="color:#fcd34d" onclick="showCORSHelp(event)">Need help?</a>)<br>' +
+          '3. Try opening <a href="http://127.0.0.1:8000/docs" target="_blank" style="color:#60a5fa">127.0.0.1:8000/docs</a> to verify the server is live.'
         );
       } else {
-        showError('⚠  ' + (err.message || 'Unknown error — check browser console (F12).'));
+        showStatus('<strong>Unexpected error</strong>' + escHtml(err.message));
       }
     } finally {
       setLoading(false);
     }
   }
+
+  function showCORSHelp(e) {
+    e.preventDefault();
+    showStatus(
+      '<strong>How to enable CORS in FastAPI</strong>' +
+      'Add this to your <code>main.py</code>:<br><br>' +
+      '<code>from fastapi.middleware.cors import CORSMiddleware</code><br>' +
+      '<code>app.add_middleware(CORSMiddleware, allow_origins=["*"],<br>' +
+      '&nbsp;&nbsp;allow_methods=["*"], allow_headers=["*"])</code>',
+      'info'
+    );
+  }
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Allow Enter key
+  document.getElementById('repoUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') analyze();
+  });
 </script>
 </body>
 </html>
