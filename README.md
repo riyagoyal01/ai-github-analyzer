@@ -1,60 +1,105 @@
-# AI GitHub Repository Analyzer
+# 🔍 AI GitHub Repo Analyzer
 
-A Python-based application that analyzes a GitHub repository and generates a summary of the project using repository metadata.
+A web app that analyzes any public GitHub repository and returns an instant summary — including language, stars, popularity level, and improvement suggestions.
 
-The application allows users to enter a GitHub repository URL through a simple HTML interface. The backend fetches repository information using the GitHub API and analyzes key details such as the programming language, number of stars, and overall popularity of the repository.
-
----
-
-## Features
-
-* Analyze a GitHub repository using its URL
-* Fetch repository metadata using the GitHub API
-* Identify the primary programming language used in the project
-* Determine repository popularity based on star count
-* Generate a structured summary of the repository
-* Backend API built using FastAPI
-* Simple HTML frontend interface for user input
+🌐 **Live Demo:** [ai-github-analyzer.netlify.app](https://ai-github-analyzer.netlify.app)
 
 ---
 
-## Tech Stack
+## ✨ Features
 
-* Python
-* FastAPI
-* GitHub REST API
-* Requests
-* Pydantic
-* HTML (Frontend)
-
----
-
-## How It Works
-
-1. User enters a GitHub repository URL in the frontend interface.
-2. The frontend sends a request to the backend API.
-3. The backend extracts the repository owner and name from the URL.
-4. The application fetches repository information from the GitHub API.
-5. The repository data is analyzed to generate a summary.
-6. The analysis results are returned and displayed to the user.
+- Paste any public GitHub repo URL and get an instant analysis
+- Displays repository name, primary language, and star count
+- Generates a summary with popularity level and improvement suggestions
+- Clean, responsive dark UI
+- FastAPI backend with CORS support
 
 ---
 
-## Example Output
+## 🛠 Tech Stack
 
-```json
-{
-  "name": "flask",
-  "language": "Python",
-  "stars": 65000,
-  "summary": "Project Name: flask ... Popularity Level: Highly popular repository"
-}
+| Layer     | Technology              |
+|-----------|-------------------------|
+| Frontend  | HTML, CSS, JavaScript   |
+| Backend   | Python, FastAPI         |
+| API       | GitHub REST API         |
+| Hosting   | Netlify + Render        |
+
+---
+
+## 🚀 Getting Started Locally
+
+### Prerequisites
+- Python 3.10+
+- pip
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/riyagoyal01/ai-github-analyzer.git
+cd ai-github-analyzer
+```
+
+### 2. Set up the backend
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 3. Run the backend
+```bash
+uvicorn main:app --reload
+```
+
+Backend will be live at `http://127.0.0.1:8000`
+
+### 4. Open the frontend
+
+Serve it locally:
+```bash
+cd frontend
+python -m http.server 3000
+```
+
+Then visit `http://localhost:3000`
+
+---
+
+## 📁 Project Structure
+
+```
+ai-github-analyzer/
+├── backend/
+│   ├── main.py              # FastAPI app entry point
+│   ├── routes.py            # API route definitions
+│   ├── github_service.py    # GitHub API integration
+│   ├── repo_analyzer.py     # Repository analysis logic
+│   ├── request_models.py    # Pydantic request/response models
+│   └── requirements.txt     # Python dependencies
+└── frontend/
+    └── index.html           # Single page frontend
 ```
 
 ---
 
-## Use Cases
+## 🔐 Environment Variables
 
-* Quickly understand the basic details of a GitHub repository
-* Analyze open source projects before exploring the code
-* Get a quick summary of repository popularity and technology
+Create a `.env` file in the `backend/` folder if needed:
+
+```
+OPENAI_API_KEY=your-key-here
+```
+
+> ⚠️ Never commit your `.env` file. It is already listed in `.gitignore`.
+
+---
+
+## 🌍 Deployment
+
+| Service  | Platform | URL |
+|----------|----------|-----|
+| Frontend | Netlify  | [ai-github-analyzer.netlify.app](https://ai-github-analyzer.netlify.app) |
+| Backend  | Render   | [ai-github-analyzer.onrender.com](https://ai-github-analyzer.onrender.com) |
+
+> ⚠️ Render free tier sleeps after 15 minutes of inactivity. The first request may take ~30 seconds to wake up.
+
+---
