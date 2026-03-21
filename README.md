@@ -2,7 +2,7 @@
 
 A web app that analyzes any public GitHub repository and returns an instant summary — including language, stars, popularity level, and improvement suggestions.
 
-🌐 **Live Demo:** [ai-github-analyzer.netlify.app](https://ai-github-analyzer.netlify.app)
+🌐 **Live Demo:** [ai-github-analyzer-chi.vercel.app](https://ai-github-analyzer-chi.vercel.app)
 
 ---
 
@@ -23,7 +23,7 @@ A web app that analyzes any public GitHub repository and returns an instant summ
 | Frontend  | HTML, CSS, JavaScript   |
 | Backend   | Python, FastAPI         |
 | API       | GitHub REST API         |
-| Hosting   | Netlify + Render        |
+| Hosting   | Vercel + Render         |
 
 ---
 
@@ -97,7 +97,7 @@ OPENAI_API_KEY=your-key-here
 
 | Service  | Platform | URL |
 |----------|----------|-----|
-| Frontend | Netlify  | [ai-github-analyzer.netlify.app](https://ai-github-analyzer.netlify.app) |
+| Frontend | Vercel   | [ai-github-analyzer-chi.vercel.app](https://ai-github-analyzer-chi.vercel.app) |
 | Backend  | Render   | [ai-github-analyzer.onrender.com](https://ai-github-analyzer.onrender.com) |
 
 > ⚠️ Render free tier sleeps after 15 minutes of inactivity. The first request may take ~30 seconds to wake up.
